@@ -104,7 +104,7 @@ fi
 # Install PyTorch with CUDA support (for Python 3.9)
 echo -e "\n[8/10] Installing PyTorch with CUDA support..."
 pip install --upgrade pip
-pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu118
+pip install torch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0 --index-url https://download.pytorch.org/whl/cu118
 
 # Verify PyTorch CUDA
 echo -e "\nVerifying PyTorch CUDA support..."
