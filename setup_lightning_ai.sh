@@ -9,11 +9,19 @@ echo "AudioCraft Setup for Lightning.ai"
 echo "=========================================="
 
 # Check current Python version
-echo -e "\n[1/9] Checking current Python version..."
-python --version || true
+echo -e "\n[1/10] Checking current Python version..."
+python3 --version || python --version || true
+
+# Install build dependencies for Python compilation
+echo -e "\n[2/10] Installing build dependencies..."
+sudo apt-get update -qq
+sudo apt-get install -y -qq build-essential libssl-dev zlib1g-dev \
+    libbz2-dev libreadline-dev libsqlite3-dev curl \
+    libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
+    libffi-dev liblzma-dev git
 
 # Install Python 3.9 using pyenv
-echo -e "\n[2/9] Setting up Python 3.9..."
+echo -e "\n[3/10] Setting up Python 3.9..."
 if ! command -v pyenv &> /dev/null; then
     echo "Installing pyenv..."
     curl https://pyenv.run | bash
@@ -54,7 +62,7 @@ pyenv local 3.9.18
 echo "✓ Using Python $(python --version)"
 
 # Check GPU availability
-echo -e "\n[3/9] Checking GPU availability..."
+echo -e "\n[4/10] Checking GPU availability..."
 if ! command -v nvidia-smi &> /dev/null; then
     echo "WARNING: nvidia-smi not found. GPU may not be available."
 else
@@ -63,26 +71,26 @@ else
 fi
 
 # Install system dependencies
-echo -e "\n[4/9] Installing FFmpeg dependencies..."
+echo -e "\n[5/10] Installing FFmpeg dependencies..."
 sudo apt-get update -qq
 sudo apt-get install -y -qq ffmpeg libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev || true
 
 # Clone/update repository
 AUDIOCRAFT_DIR="$HOME/audiocraft"
 if [ -d "$AUDIOCRAFT_DIR" ]; then
-    echo -e "\n[5/9] Updating existing AudioCraft repository..."
+    echo -e "\n[6/10] Updating existing AudioCraft repository..."
     cd "$AUDIOCRAFT_DIR"
     git fetch origin
     git checkout main
     git pull origin main
 else
-    echo -e "\n[5/9] Cloning AudioCraft repository (original Meta version)..."
+    echo -e "\n[6/10] Cloning AudioCraft repository (original Meta version)..."
     git clone https://github.com/facebookresearch/audiocraft.git "$AUDIOCRAFT_DIR"
     cd "$AUDIOCRAFT_DIR"
 fi
 
 # Verify we're using Python 3.9
-echo -e "\n[6/9] Verifying Python 3.9..."
+echo -e "\n[7/10] Verifying Python 3.9..."
 python --version
 if ! python -c "import sys; exit(0 if sys.version_info[:2] == (3, 9) else 1)"; then
     echo "ERROR: Python 3.9 required but got $(python --version)"
@@ -90,7 +98,7 @@ if ! python -c "import sys; exit(0 if sys.version_info[:2] == (3, 9) else 1)"; t
 fi
 
 # Install PyTorch with CUDA support (for Python 3.9)
-echo -e "\n[7/9] Installing PyTorch with CUDA support..."
+echo -e "\n[8/10] Installing PyTorch with CUDA support..."
 pip install --upgrade pip
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
@@ -99,14 +107,14 @@ echo -e "\nVerifying PyTorch CUDA support..."
 python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}'); print(f'CUDA version: {torch.version.cuda if torch.cuda.is_available() else \"N/A\"}'); print(f'GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"N/A\"}')"
 
 # Install dependencies
-echo -e "\n[8/9] Installing AudioCraft dependencies..."
+echo -e "\n[9/10] Installing AudioCraft dependencies..."
 pip install -U audiocraft  # Install from PyPI for stable version
 
 # Or install from source (editable mode)
 # pip install -e .
 
 # Verify installation
-echo -e "\n[9/9] Verifying installation..."
+echo -e "\n[10/10] Verifying installation..."
 echo "=========================================="
 echo "Verifying installation..."
 echo "=========================================="
