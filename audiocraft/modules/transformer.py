@@ -20,18 +20,28 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from torch.utils.checkpoint import checkpoint as torch_checkpoint
-from xformers import ops
+
+# Try to import xformers, but make it optional
+try:
+    from xformers import ops
+    _has_xformers = True
+except ImportError:
+    ops = None
+    _has_xformers = False
 
 from .rope import RotaryEmbedding
 from .streaming import StreamingModule
 
+# Default to torch backend, especially if xformers is not available
 _efficient_attention_backend: str = 'torch'
 
 
 def set_efficient_attention_backend(backend: str = 'torch'):
     # Using torch by default, it seems a bit faster on older P100 GPUs (~20% faster).
     global _efficient_attention_backend
-    assert _efficient_attention_backend in ['xformers', 'torch']
+    if backend == 'xformers' and not _has_xformers:
+        raise RuntimeError("xformers backend requested but xformers is not installed")
+    assert backend in ['xformers', 'torch']
     _efficient_attention_backend = backend
 
 
@@ -188,7 +198,9 @@ class StreamingMultiheadAttention(StreamingModule):
             assert rope is None, "Rope cannot work with cross attention."
 
         if memory_efficient:
-            _verify_xformers_memory_efficient_compat()
+            if _has_xformers and _efficient_attention_backend == 'xformers':
+                _verify_xformers_memory_efficient_compat()
+            # If xformers is not available, we'll use torch backend automatically
 
         self.custom = _is_custom(custom, memory_efficient)
         if self.custom:
@@ -236,6 +248,9 @@ class StreamingMultiheadAttention(StreamingModule):
         # convention both in the builtin MHA in Pytorch, and Xformers functions.
         time_dim = _get_attention_time_dimension(self.memory_efficient)
         if self.memory_efficient:
+            if not _has_xformers:
+                # Fallback: xformers not available, return None and rely on torch attention
+                return None
             from xformers.ops import LowerTriangularMask
             if current_steps == 1:
                 # If we only have one step, then we do not need a mask.
@@ -371,7 +386,10 @@ class StreamingMultiheadAttention(StreamingModule):
                     else:
                         bound_layout = "b t p h d"
                     packed = rearrange(projected, f"b t (p h d) -> {bound_layout}", p=3, h=self.num_heads)
-                    q, k, v = ops.unbind(packed, dim=2)
+                    if _has_xformers and ops is not None:
+                        q, k, v = ops.unbind(packed, dim=2)
+                    else:
+                        q, k, v = torch.unbind(packed, dim=2)
                 else:
                     embed_dim = self.embed_dim
                     per_head_dim = (embed_dim // self.num_heads)
@@ -406,7 +424,7 @@ class StreamingMultiheadAttention(StreamingModule):
                     attn_mask = attn_mask.to(q.dtype)
                     attn_mask = attn_mask[:seq_len, :seq_len]
                 p = self.dropout if self.training else 0
-                if _efficient_attention_backend == 'torch':
+                if _efficient_attention_backend == 'torch' or not _has_xformers:
                     x = torch.nn.functional.scaled_dot_product_attention(
                         q, k, v, is_causal=attn_mask is not None, dropout_p=p)
                 else:
@@ -637,6 +655,8 @@ class StreamingTransformer(StreamingModule):
 
         assert checkpointing in ['none', 'torch', 'xformers_default', 'xformers_mm']
         if self.checkpointing.startswith('xformers'):
+            if not _has_xformers:
+                raise RuntimeError(f"Checkpointing method '{checkpointing}' requires xformers but it's not installed")
             _verify_xformers_internal_compat()
 
         self.layers = nn.ModuleList()
@@ -663,6 +683,8 @@ class StreamingTransformer(StreamingModule):
         elif method == 'torch':
             return torch_checkpoint(layer, *args, use_reentrant=False, **kwargs)
         elif method.startswith('xformers'):
+            if not _has_xformers:
+                raise RuntimeError(f"Checkpointing method '{method}' requires xformers but it's not installed")
             from xformers.checkpoint_fairinternal import checkpoint, _get_default_policy
             if method == 'xformers_default':
                 # those operations will be saved, and not recomputed.
