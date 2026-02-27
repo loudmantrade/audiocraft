@@ -1,0 +1,39 @@
+# AudioCraft requirements для Python 3.12
+# Обновленные версии пакетов для совместимости
+
+# Audio processing
+av
+julius
+librosa
+demucs
+encodec>=0.1.1
+
+# Deep Learning
+torch>=2.1.0
+torchaudio>=2.1.0
+einops
+torchmetrics
+
+# Transformers and models
+transformers>=4.35.0
+huggingface_hub
+sentencepiece
+# xformers>=0.0.23  # Раскомментируйте если доступно для Python 3.12
+
+# Configuration and training
+hydra-core>=1.3
+hydra_colorlog
+omegaconf
+flashy>=0.0.2
+
+# Utilities
+num2words
+numpy<2.0
+tqdm
+protobuf
+
+# Web interface
+gradio>=4.0.0
+
+# NLP (optional, для некоторых conditioners)
+spacy>=3.7.0
