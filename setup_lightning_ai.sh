@@ -104,7 +104,7 @@ fi
 # Install PyTorch with CUDA support (for Python 3.9)
 echo -e "\n[8/10] Installing PyTorch with CUDA support..."
 pip install --upgrade pip
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu118
 
 # Verify PyTorch CUDA
 echo -e "\nVerifying PyTorch CUDA support..."
@@ -112,10 +112,10 @@ python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA av
 
 # Install dependencies
 echo -e "\n[9/10] Installing AudioCraft dependencies..."
-pip install -U audiocraft  # Install from PyPI for stable version
+pip install -U "audiocraft[dev]"
 
-# Or install from source (editable mode)
-# pip install -e .
+# Fix numpy compatibility (AudioCraft requires numpy<2)
+pip install "numpy<2.0"
 
 # Verify installation
 echo -e "\n[10/10] Verifying installation..."
