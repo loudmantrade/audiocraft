@@ -53,8 +53,8 @@ else
     echo "Python 3.9.18 already installed"
 fi
 
-# Set Python 3.9 as local version
-pyenv local 3.9.18
+# Set Python 3.9 as global default temporarily for installation
+pyenv global 3.9.18
 echo "✓ Using Python $(python --version)"
 
 # Set Python 3.9 as local version
@@ -88,6 +88,9 @@ else
     git clone https://github.com/facebookresearch/audiocraft.git "$AUDIOCRAFT_DIR"
     cd "$AUDIOCRAFT_DIR"
 fi
+
+# Set Python 3.9 as local version in this directory
+pyenv local 3.9.18
 
 # Verify we're using Python 3.9
 echo -e "\n[7/10] Verifying Python 3.9..."
@@ -130,6 +133,7 @@ echo "Python version: $(python --version)"
 echo "Installation directory: $AUDIOCRAFT_DIR"
 echo ""
 echo "Quick start:"
+echo "  cd $AUDIOCRAFT_DIR  # (Python 3.9 auto-activates)"
 echo "  python"
 echo "  >>> from audiocraft.models import MusicGen"
 echo "  >>> model = MusicGen.get_pretrained('facebook/musicgen-small')"
@@ -138,6 +142,8 @@ echo "Or launch web interface:"
 echo "  cd $AUDIOCRAFT_DIR"
 echo "  python -m demos.musicgen_app --share"
 echo ""
-echo "To use Python 3.9 in new sessions:"
-echo "  cd $AUDIOCRAFT_DIR  # (will auto-activate Python 3.9)"
+echo "To use Python 3.9 in all sessions, add to ~/.bashrc:"
+echo "  export PYENV_ROOT=\"\$HOME/.pyenv\""
+echo "  export PATH=\"\$PYENV_ROOT/bin:\$PATH\""
+echo "  eval \"\$(pyenv init -)\""
 echo ""
