@@ -22,28 +22,29 @@ sudo apt-get install -y -qq build-essential libssl-dev zlib1g-dev \
 
 # Install Python 3.9 using pyenv
 echo -e "\n[3/10] Setting up Python 3.9..."
+
+# Setup pyenv environment variables
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+
 if ! command -v pyenv &> /dev/null; then
     echo "Installing pyenv..."
     curl https://pyenv.run | bash
     
-    # Add pyenv to PATH
-    export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
-    eval "$(pyenv init -)"
-    eval "$(pyenv virtualenv-init -)"
-    
-    # Add to bashrc for persistence
-    echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
-    echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
-    echo 'eval "$(pyenv init -)"' >> ~/.bashrc
-    echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
+    # Add pyenv to bashrc for persistence
+    if ! grep -q "PYENV_ROOT" ~/.bashrc; then
+        echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+        echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+        echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+        echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
+    fi
 else
     echo "pyenv already installed"
-    export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
-    eval "$(pyenv init -)"
-    eval "$(pyenv virtualenv-init -)"
 fi
+
+# Initialize pyenv in current shell
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)" 2>/dev/null || true
 
 # Install Python 3.9.18 (latest 3.9)
 if ! pyenv versions | grep -q "3.9.18"; then
