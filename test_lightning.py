@@ -2,8 +2,10 @@
 """
 Quick test script for AudioCraft on Lightning.ai
 Generates a short music sample to verify installation
+Requires: Python 3.9
 """
 
+import sys
 import torch
 import torchaudio
 from audiocraft.models import MusicGen
@@ -14,12 +16,20 @@ def main():
     print("AudioCraft Quick Test")
     print("=" * 60)
     
+    # Check Python version
+    python_version = sys.version_info
+    print(f"\n✓ Python version: {python_version.major}.{python_version.minor}.{python_version.micro}")
+    if python_version.major != 3 or python_version.minor != 9:
+        print(f"⚠️  Warning: Recommended Python 3.9, you have {python_version.major}.{python_version.minor}")
+    
     # Check GPU
-    print(f"\n✓ PyTorch version: {torch.__version__}")
+    print(f"✓ PyTorch version: {torch.__version__}")
     print(f"✓ CUDA available: {torch.cuda.is_available()}")
     if torch.cuda.is_available():
         print(f"✓ GPU: {torch.cuda.get_device_name(0)}")
         print(f"✓ CUDA version: {torch.version.cuda}")
+    else:
+        print("⚠️  Warning: GPU not available, generation will be slow")
     
     # Load model
     print("\n" + "=" * 60)
